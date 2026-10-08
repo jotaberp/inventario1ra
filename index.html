@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consulta EPP - Bomberos</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    :root {
+      --azul-bombero: #000040;
+      --amarillo-escudo: #fbc02d;
+      --rojo-oscuro: #800000;
+    }
+    body { background: #f0f2f5; padding: 15px; font-family: 'Segoe UI', sans-serif; }
+    #reader { width: 100%; max-width: 450px; margin: auto; background: white; border-radius: 20px; overflow: hidden; border: 4px solid var(--azul-bombero); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .card { margin-top: 15px; border-radius: 20px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+    .header-b { background: linear-gradient(135deg, var(--azul-bombero) 0%, #000060 100%); color: white; padding: 25px 15px; text-align: center; border-bottom: 4px solid var(--amarillo-escudo); }
+    .section-title { background: #e9ecef; padding: 10px 15px; font-weight: bold; font-size: 0.85em; color: var(--azul-bombero); margin-top: 15px; border-radius: 8px; text-transform: uppercase; border-left: 5px solid var(--rojo-oscuro); }
+    .data-row { display: flex; justify-content: space-between; padding: 10px 5px; border-bottom: 1px solid #f1f1f1; align-items: center; }
+    .label { color: #555; font-size: 0.9em; font-weight: 500; }
+    .val { font-weight: 700; color: #111; text-align: right; }
+    .val.falta { color: #b00020; font-weight: 600; font-size: 0.8em; }
+    #loading { display: none; margin-top: 30px; color: var(--azul-bombero); }
+    #estado { max-width: 450px; margin: 15px auto 0; text-align: left; }
+    .btn-scan { background-color: var(--rojo-oscuro); border: none; padding: 15px; font-weight: bold; border-radius: 15px; color: white; transition: 0.3s; box-shadow: 0 4px 10px rgba(128,0,0,0.3); }
+    .btn-scan:hover { background-color: #a00000; color: white; transform: translateY(-2px); }
+    .btn-foto { background: white; color: var(--azul-bombero); border: 2px solid var(--azul-bombero); border-radius: 15px; padding: 10px; font-weight: 600; }
+    .logo-img { width: 100px; height: 100px; margin-bottom: 15px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2)); }
+  </style>
+</head>
+<body>
+  <div class="container text-center">
+    <div class="py-4">
+      <img src="https://i.ibb.co/rGY1ZLYK/Dise-o-sin-t-tulo-2026-01-28-T182810-256.jpg" class="logo-img" alt="Logo Bomberos" onerror="this.style.display='none'">
+      <h3 class="fw-bold" style="color: var(--azul-bombero); margin: 0;">1ª COMPAÑÍA CABRERO</h3>
+      <p class="text-muted small">SISTEMA DE CONTROL EPP</p>
+    </div>
+
+    <div id="reader"></div>
+
+    <!-- Respaldo: si la cámara en vivo falla, se puede leer el QR desde una foto -->
+    <div id="zonaFoto" style="max-width:450px; margin: 15px auto 0;">
+      <label class="btn btn-foto w-100">
+        📷 Escanear con foto
+        <input type="file" id="fotoQR" accept="image/*" capture="environment" hidden>
+      </label>
+    </div>
+    <div id="lectorArchivo" style="display:none;"></div>
+
+    <div id="loading" class="spinner-border" role="status"></div>
+    <div id="estado" class="d-none"></div>
+
+    <div id="resultado" style="display:none;">
+      <div class="card text-start">
+        <div class="header-b">
+          <h4 data-campo="NOMBRE_VOLUNTARIO" class="m-0 fw-bold text-uppercase"></h4>
+          <div data-campo="CARGO" class="badge mt-2 px-3 py-2" style="background-color: var(--amarillo-escudo); color: black;"></div>
+        </div>
+        <div class="card-body px-4 pb-4">
+
+          <div class="section-title">🛡️ Equipo Estructural</div>
+          <div class="data-row"><span class="label">Casaca Estructural</span><span class="val" data-campo="Casaca_Estructural"></span></div>
+          <div class="data-row"><span class="label">Talla</span><span class="val" data-campo="Talla_CE"></span></div>
+          <div class="data-row"><span class="label">Jardinera Estructural</span><span class="val" data-campo="Jardinera_Estructural"></span></div>
+          <div class="data-row"><span class="label">Talla</span><span class="val" data-campo="Talla_JE"></span></div>
+          <div class="data-row"><span class="label">Casco Estructural</span><span class="val" data-campo="Casco_Estructural"></span></div>
+          <div class="data-row"><span class="label">Guantes Estruct.</span><span class="val" data-campo="Guantes_Estructurales"></span></div>
+          <div class="data-row"><span class="label">Talla Guantes</span><span class="val" data-campo="Talla_GE"></span></div>
+          <div class="data-row"><span class="label">Botas</span><span class="val" data-campo="Botas_CG"></span></div>
+          <div class="data-row"><span class="label">Talla Botas</span><span class="val" data-campo="Talla_Botas"></span></div>
+
+          <div class="section-title">🌲 Equipo Forestal</div>
+          <div class="data-row"><span class="label">Casaca Forestal</span><span class="val" data-campo="Casaca_Forestal"></span></div>
+          <div class="data-row"><span class="label">Talla Casaca F.</span><span class="val" data-campo="Talla_CF"></span></div>
+          <div class="data-row"><span class="label">Jardinera Forestal</span><span class="val" data-campo="Jardinera_Forestal"></span></div>
+          <div class="data-row"><span class="label">Talla Jardinera F.</span><span class="val" data-campo="Talla_JF"></span></div>
+
+          <div class="section-title">🧗 Rescate y Otros</div>
+          <div class="data-row"><span class="label">Talla Casaca Rescate</span><span class="val" data-campo="Talla_CR"></span></div>
+          <div class="data-row"><span class="label">Guantes Rescate</span><span class="val" data-campo="Guantes_Rescate"></span></div>
+          <div class="data-row"><span class="label">Casco Sicor</span><span class="val" data-campo="Casco_Sicor"></span></div>
+
+          <div class="section-title">🔦 Accesorios</div>
+          <div class="data-row"><span class="label">Radio Portátil</span><span class="val" data-campo="Radio_Portatil"></span></div>
+          <div class="data-row"><span class="label">Esclavina</span><span class="val" data-campo="Esclavina"></span></div>
+          <div class="data-row"><span class="label">Linterna</span><span class="val" data-campo="Linterna"></span></div>
+
+          <button class="btn btn-scan w-100 mt-4 shadow" onclick="iniciarEscaner()">NUEVO ESCANEO</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========= PEGA AQUÍ LA URL DE TU IMPLEMENTACIÓN DE APPS SCRIPT (termina en /exec) =========
+    const URL_API = 'https://script.google.com/macros/s/AKfycbz-n7wdOYx07dFUkZZMOVtyQLUfGLX_wWsR52Y-thzOTyLLYoTfxR-Qihw1-3I9NEJv/exec';
+    // ===========================================================================================
+
+    let lector = null;
+    let procesando = false;
+
+    function $(id) { return document.getElementById(id); }
+
+    function mostrarEstado(msg, tipo, conBoton) {
+      const e = $('estado');
+      e.className = 'alert alert-' + (tipo || 'warning');
+      e.innerHTML = '';
+      const p = document.createElement('div');
+      p.textContent = msg;
+      e.appendChild(p);
+      if (conBoton !== false) {
+        const b = document.createElement('button');
+        b.className = 'btn btn-scan w-100 mt-3';
+        b.textContent = 'REINTENTAR';
+        b.onclick = iniciarEscaner;
+        e.appendChild(b);
+      }
+    }
+
+    async function iniciarEscaner() {
+      procesando = false;
+      $('resultado').style.display = 'none';
+      $('loading').style.display = 'none';
+      $('estado').className = 'd-none';
+      $('reader').style.display = 'block';
+      $('zonaFoto').style.display = 'block';
+
+      if (typeof Html5Qrcode === 'undefined') {
+        mostrarEstado('No cargó la librería del lector QR. Revisa la conexión a internet y recarga la página.', 'danger');
+        return;
+      }
+
+      try {
+        if (!lector) lector = new Html5Qrcode('reader');
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+        try {
+          await lector.start({ facingMode: 'environment' }, config, onScanSuccess);
+        } catch (e1) {
+          await lector.start({ facingMode: 'user' }, config, onScanSuccess);
+        }
+      } catch (e) {
+        $('reader').style.display = 'none';
+        mostrarEstado('No se pudo abrir la cámara (' + (e && e.message ? e.message : e) +
+          '). Revisa en Ajustes que el navegador tenga permiso de cámara, o usa "Escanear con foto".', 'warning');
+      }
+    }
+
+    function onScanSuccess(texto) {
+      if (procesando) return;
+      procesando = true;
+      if (navigator.vibrate) navigator.vibrate(100);
+      lector.stop().catch(() => {}).finally(() => enviarId(texto));
+    }
+
+    async function enviarId(texto) {
+      $('reader').style.display = 'none';
+      $('zonaFoto').style.display = 'none';
+      $('estado').className = 'd-none';
+      $('loading').style.display = 'inline-block';
+      try {
+        const r = await fetch(URL_API + '?id=' + encodeURIComponent(texto));
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        mostrarDatos(await r.json());
+      } catch (err) {
+        $('loading').style.display = 'none';
+        mostrarEstado('No se pudo consultar la planilla: ' + err.message +
+          '. Revisa que URL_API sea correcta y que la implementación tenga acceso "Cualquier persona".', 'danger');
+      }
+    }
+
+    function mostrarDatos(resp) {
+      $('loading').style.display = 'none';
+      if (!resp || !resp.ok) {
+        mostrarEstado(resp && resp.error ? resp.error : 'El servidor no devolvió datos.', 'warning');
+        return;
+      }
+      const d = resp.datos;
+      document.querySelectorAll('[data-campo]').forEach(el => {
+        const k = el.dataset.campo;
+        if (k in d) {
+          el.textContent = d[k];
+          el.classList.remove('falta');
+        } else {
+          el.textContent = '⚠ falta columna "' + k + '"';
+          el.classList.add('falta');
+        }
+      });
+      $('resultado').style.display = 'block';
+    }
+
+    $('fotoQR').addEventListener('change', async (e) => {
+      const archivo = e.target.files[0];
+      e.target.value = '';
+      if (!archivo) return;
+      try {
+        if (lector) { try { await lector.stop(); } catch (_) {} }
+        const lectorFoto = new Html5Qrcode('lectorArchivo');
+        const texto = await lectorFoto.scanFile(archivo, false);
+        if (navigator.vibrate) navigator.vibrate(100);
+        enviarId(texto);
+      } catch (err) {
+        mostrarEstado('No se detectó un código QR en la foto. Acércate más, con buena luz y el QR centrado.', 'warning');
+      }
+    });
+
+    window.onload = iniciarEscaner;
+  </script>
+</body>
+</html>
